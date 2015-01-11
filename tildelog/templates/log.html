@@ -1,0 +1,7 @@
+<div id="tildelog">
+	{{range .}}
+	<hr />
+	<h3>{{.Date}}</h3>
+	<p>{{printf "%s" .Body}}</p>
+	{{end}}
+</div>
