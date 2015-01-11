@@ -9,6 +9,7 @@ import (
 	"os"
 	"bufio"
 	"regexp"
+	"flag"
 )
 
 const entriesPath = "./entries/"
@@ -48,6 +49,10 @@ func main() {
 	fmt.Println("    ~log generator v1.0")
 	fmt.Println()
 
+	// Get any arguments
+	templateFilePtr := flag.String("template", "log", "Tildelog template file (defined name).")
+	flag.Parse()
+	
 	entryFiles := getEntries()
 	entries := make([]Entry, len(*entryFiles))
 	i := 0
@@ -62,7 +67,9 @@ func main() {
 		i++
 	}
 	
-	generateLog(entries)
+	fmt.Printf("Using template %s\n", *templateFilePtr)
+
+	generateLog(entries, *templateFilePtr)
 }
 
 var validFileFormat = regexp.MustCompile("^[0-9]{8}$")
@@ -83,7 +90,7 @@ func getEntries() *[]string {
 	return &fileList
 }
 
-func generateLog(entries []Entry) {
+func generateLog(entries []Entry, templateFile string) {
 	file, err := os.Create(outputPath + "log.html")
 	if err != nil {
 		panic(err)
@@ -92,11 +99,11 @@ func generateLog(entries []Entry) {
 	defer file.Close()
 	
 	writer := bufio.NewWriter(file)
-	template, err := template.ParseFiles(templatesPath + "log.html")
+	template, err := template.ParseGlob(templatesPath + "*.html")
 	if err != nil {
 		panic(err)
 	}
-	template.Execute(writer, entries)
+	template.ExecuteTemplate(writer, templateFile, entries)
 	writer.Flush()
 }
 
