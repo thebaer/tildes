@@ -96,7 +96,7 @@ func generateLog(entries []Entry) {
 	if err != nil {
 		panic(err)
 	}
-    template.Execute(writer, entries)
-    writer.Flush()
+	template.Execute(writer, entries)
+	writer.Flush()
 }
 
