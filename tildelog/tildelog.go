@@ -62,14 +62,16 @@ func main() {
 			fmt.Printf("Error, skipping entry %s: %s\n", file, err)
 			continue
 		}
-		fmt.Printf("Adding entry %s\n", file)
+		fmt.Printf("Adding entry %s...\n", file)
 		entries[i] = *entry
 		i++
 	}
 	
-	fmt.Printf("Using template %s\n", *templateFilePtr)
+	fmt.Printf("Using template %s...\n", *templateFilePtr)
 
 	generateLog(entries, *templateFilePtr)
+
+	fmt.Printf("Finished! Saved to %slog.html\n", outputPath)
 }
 
 var validFileFormat = regexp.MustCompile("^[0-9]{8}$")
