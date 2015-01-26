@@ -4,18 +4,23 @@ import (
 	"os"
 	"fmt"
 	"time"
+	"flag"
 	"bufio"
 	"strings"
 	"path/filepath"
 	"text/template"
 )
 
-const (
-	searchDir = "Code"
-)
+var searchDir string
 
 func main() {
 	fmt.Println("Starting...")
+
+	// Get any arguments
+	dirPtr := flag.String("d", "Code", "Directory to scan for each user.")
+	flag.Parse()
+	searchDir = *dirPtr
+
 	generate(findProjects())
 }
 
