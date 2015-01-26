@@ -32,7 +32,14 @@ func findProjects() map[string]User {
 	for _, path := range files {
 		pparts := strings.Split(path, "/")
 		uname := pparts[2]
-		proj := &Project{Name: filepath.Base(path), Path: strings.Replace(path, "/home/", "~", -1)}
+		fname := filepath.Base(path)
+
+		// Exclude certain files
+		if strings.HasPrefix(fname, ".") || strings.HasSuffix(fname, ".log") {
+			continue
+		}
+
+		proj := &Project{Name: fname, Path: strings.Replace(path, "/home/", "~", -1)}
 		u, exists := users[uname]
 		if !exists {
 			fmt.Printf("Found Code for ~%s.\n", uname)
