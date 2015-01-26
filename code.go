@@ -10,6 +10,10 @@ import (
 	"text/template"
 )
 
+const (
+	searchDir = "Code"
+)
+
 func main() {
 	fmt.Println("Starting...")
 	generate(findProjects())
@@ -26,7 +30,7 @@ type Project struct {
 }
 
 func findProjects() map[string]User {
-	files, _ := filepath.Glob("/home/*/Code/*")
+	files, _ := filepath.Glob("/home/*/" + searchDir + "/*")
 	users := make(map[string]User)
 
 	for _, path := range files {
@@ -42,7 +46,7 @@ func findProjects() map[string]User {
 		proj := &Project{Name: fname, Path: strings.Replace(path, "/home/", "~", -1)}
 		u, exists := users[uname]
 		if !exists {
-			fmt.Printf("Found Code for ~%s.\n", uname)
+			fmt.Printf("Found %s for ~%s.\n", searchDir, uname)
 			projs := []Project{*proj}
 			u = User{Name: uname, Projects: projs}
 		} else {
@@ -54,6 +58,7 @@ func findProjects() map[string]User {
 }
 
 type Page struct {
+	FolderName string
 	Host string
 	Users map[string]User
 	Updated string
@@ -68,7 +73,7 @@ func graphicalName(n string) string {
 func generate(users map[string]User) {
 	fmt.Println("Generating page.")
 
-	f, err := os.Create(os.Getenv("HOME") + "/public_html/code.html")
+	f, err := os.Create(os.Getenv("HOME") + "/public_html/" + strings.ToLower(searchDir) + ".html")
 	if err != nil {
 		panic(err)
 	}
@@ -88,7 +93,7 @@ func generate(users map[string]User) {
 	updated := curTime.Format(time.RFC3339)
 
 	// Generate the page
-	page := &Page{Host: graphicalName(host), UpdatedForHumans: updatedReadable, Updated: updated, Users: users}
+	page := &Page{FolderName: searchDir, Host: graphicalName(host), UpdatedForHumans: updatedReadable, Updated: updated, Users: users}
 	template.ExecuteTemplate(w, "code", page)
 	w.Flush()
 

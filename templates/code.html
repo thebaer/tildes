@@ -2,14 +2,14 @@
 <html>
 	<head>
 
-		<title>Code on {{.Host}}</title>
+		<title>{{.FolderName}} on {{.Host}}</title>
 
 		<link type="text/css" rel="stylesheet" href="tilde.css" />
 
 	</head>
 	<body id="hello">
 
-		<h1>Code on {{.Host}}</h1>
+		<h1>{{.FolderName}} on {{.Host}}</h1>
 		<p>Last Updated: <time datetime="{{.Updated}}">{{.UpdatedForHumans}}</time></p>
 
 		{{range .Users}}
