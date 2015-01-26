@@ -38,8 +38,8 @@ func findProjects() map[string]User {
 		uname := pparts[2]
 		fname := filepath.Base(path)
 
-		// Exclude certain files
-		if strings.HasPrefix(fname, ".") || strings.HasSuffix(fname, ".log") {
+		// Exclude certain file names
+		if strings.HasPrefix(fname, ".") || strings.HasSuffix(fname, ".log") || strings.HasSuffix(fname, "~") {
 			continue
 		}
 
