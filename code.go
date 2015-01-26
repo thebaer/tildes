@@ -60,6 +60,11 @@ type Page struct {
 	UpdatedForHumans string
 }
 
+func graphicalName(n string) string {
+	r := strings.NewReplacer("tilde", "~", "ctrl-c", "^C", "nuclear", "&#9762;")
+	return r.Replace(n)
+}
+
 func generate(users map[string]User) {
 	fmt.Println("Generating page.")
 
@@ -83,7 +88,7 @@ func generate(users map[string]User) {
 	updated := curTime.Format(time.RFC3339)
 
 	// Generate the page
-	page := &Page{Host: host, UpdatedForHumans: updatedReadable, Updated: updated, Users: users}
+	page := &Page{Host: graphicalName(host), UpdatedForHumans: updatedReadable, Updated: updated, Users: users}
 	template.ExecuteTemplate(w, "code", page)
 	w.Flush()
 
