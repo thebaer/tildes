@@ -12,6 +12,7 @@ import (
 )
 
 var searchDir string
+var searchDirs []string
 
 func main() {
 	fmt.Println("Starting...")
@@ -20,8 +21,13 @@ func main() {
 	dirPtr := flag.String("d", "Code", "Directory to scan for each user.")
 	flag.Parse()
 	searchDir = *dirPtr
+	searchDirs = strings.Split(searchDir, ",")
 
-	generate(findProjects())
+	if len(searchDirs) > 1 {
+		generate(findProjects(), searchDirs[0])
+	} else {
+		generate(findProjects(), searchDir)
+	}
 }
 
 type User struct {
@@ -35,10 +41,25 @@ type Project struct {
 }
 
 func findProjects() map[string]User {
-	files, _ := filepath.Glob("/home/*/" + searchDir + "/*")
+	var files []string
 	users := make(map[string]User)
 
-	for _, path := range files {
+	if len(searchDirs) > 1 {
+		for _, d := range searchDirs {
+			files, _ = filepath.Glob("/home/*/" + d + "/*")
+			mapFiles(&files, users)
+		}
+	} else {
+		files, _ = filepath.Glob("/home/*/" + searchDir + "/*")
+		mapFiles(&files, users)
+	}
+
+
+	return users
+}
+
+func mapFiles(files *[]string, users map[string]User) {
+	for _, path := range *files {
 		pparts := strings.Split(path, "/")
 		uname := pparts[2]
 		fname := filepath.Base(path)
@@ -58,7 +79,7 @@ func findProjects() map[string]User {
 		proj := &Project{Name: fname, Path: strings.Replace(path, "/home/", "~", -1)}
 		u, exists := users[uname]
 		if !exists {
-			fmt.Printf("Found %s for ~%s.\n", searchDir, uname)
+			fmt.Printf("Found %s for ~%s.\n", pparts[3], uname)
 			projs := []Project{*proj}
 			u = User{Name: uname, Projects: projs}
 		} else {
@@ -66,11 +87,11 @@ func findProjects() map[string]User {
 		}
 		users[uname] = u
 	}
-	return users
 }
 
 type Page struct {
 	FolderName string
+	Folders []string
 	Host string
 	Users map[string]User
 	Updated string
@@ -82,18 +103,40 @@ func graphicalName(n string) string {
 	return r.Replace(n)
 }
 
-func generate(users map[string]User) {
+func Split(s string, d string) []string {
+	arr := strings.Split(s, d)
+	return arr
+}
+
+func ListDirs(dirs []string) string {
+	if len(dirs) > 1 {
+		for i := 0; i < len(dirs); i++ {
+			d := dirs[i]
+			d = fmt.Sprintf("<strong>%s</strong>", d)
+			dirs[i] = d
+		}
+		return strings.Join(dirs, " or ")
+	}
+	return fmt.Sprintf("<strong>%s</strong>", dirs[0])
+}
+
+func generate(users map[string]User, outputFile string) {
 	fmt.Println("Generating page.")
 
-	f, err := os.Create(os.Getenv("HOME") + "/public_html/" + strings.ToLower(searchDir) + ".html")
+	f, err := os.Create(os.Getenv("HOME") + "/public_html/" + strings.ToLower(outputFile) + ".html")
 	if err != nil {
 		panic(err)
 	}
 	
 	defer f.Close()
+
+	funcMap := template.FuncMap {
+		"Split": Split,
+		"ListDirs": ListDirs,
+	}
 	
 	w := bufio.NewWriter(f)
-	template, err := template.ParseFiles("templates/code.html")
+	template, err := template.New("").Funcs(funcMap).ParseFiles("templates/code.html")
 	if err != nil {
 		panic(err)
 	}
@@ -105,7 +148,7 @@ func generate(users map[string]User) {
 	updated := curTime.Format(time.RFC3339)
 
 	// Generate the page
-	page := &Page{FolderName: searchDir, Host: graphicalName(host), UpdatedForHumans: updatedReadable, Updated: updated, Users: users}
+	page := &Page{FolderName: searchDirs[0], Folders: searchDirs, Host: graphicalName(host), UpdatedForHumans: updatedReadable, Updated: updated, Users: users}
 	template.ExecuteTemplate(w, "code", page)
 	w.Flush()
 

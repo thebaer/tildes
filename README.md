@@ -42,3 +42,13 @@ go build code.go
 ```
 
 This outputs an HTML file in your `public_html/` folder based on the _templates/code.html_ template. The HTML file will be named after whatever directory you're scanning, so in this example, it'd be `public_html/bin.html`.
+
+#### multiple sources
+You can optionally supply multiple folders by passing a comma-separated list of folder to the `-d` flag. The first folder in the list will be used as the output file name.
+
+```bash
+go build code.go
+./code -d Code,code,projects
+```
+
+This lists files in `/home/*/{Code,code,projects}/*`.
