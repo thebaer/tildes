@@ -78,9 +78,9 @@ func generate(users map[string]User) {
 
 	// Extra page data
 	host, _ := os.Hostname()
-	curTime := time.Now()
-	updatedReadable := curTime.UTC().Format(time.RFC1123)
-	updated := curTime.UTC().Format(time.RFC3339)
+	curTime := time.Now().UTC()
+	updatedReadable := curTime.Format(time.RFC1123)
+	updated := curTime.Format(time.RFC3339)
 
 	// Generate the page
 	page := &Page{Host: host, UpdatedForHumans: updatedReadable, Updated: updated, Users: users}
