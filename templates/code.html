@@ -1,0 +1,28 @@
+{{define "code"}}
+<html>
+	<head>
+
+		<title>Code on {{.Host}}</title>
+
+		<link type="text/css" rel="stylesheet" href="tilde.css" />
+
+	</head>
+	<body id="hello">
+
+		<h1>Code on {{.Host}}</h1>
+		<p>Last Updated: <time datetime="{{.Updated}}">{{.UpdatedForHumans}}</time></p>
+
+		{{range .Users}}
+		<h2><a href="/~{{.Name}}/">~{{.Name}}</a></h2>
+		<div class="links">
+			<ul class="links">
+				{{range .Projects}}
+				<li><strong>{{.Name}}</strong> &middot; {{.Path}}</li>
+				{{end}}
+			</ul>
+		</div>
+		{{end}}
+
+	</body>
+</html>
+{{end}}
