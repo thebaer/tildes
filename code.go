@@ -43,6 +43,13 @@ func findProjects() map[string]User {
 			continue
 		}
 
+		// Ensure file is other-readable
+		// TODO: just detect if we can actually read this, instead
+		info, _ := os.Stat(path)
+		if info.Mode() & 0004 == 0 {
+			continue
+		}
+
 		proj := &Project{Name: fname, Path: strings.Replace(path, "/home/", "~", -1)}
 		u, exists := users[uname]
 		if !exists {
