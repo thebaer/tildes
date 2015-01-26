@@ -4,7 +4,34 @@
 Various scripts and programs for the tildeverse.
 
 ## tildelog
-Use **tildelog** to easily create a simple log for your tilde.
+Use **tildelog** to easily create a simple log for your tilde. [Create new posts](https://github.com/thebaer/tildes/tree/master/tildelog/entries#tildelog-entries) in the `tildelog/entries/` folder, then run this:
+
+```bash
+cd tildelog
+go build tildelog.go
+./tildelog -template mytildelog
+```
+
+This will use any template in `tildelog/templates/` defined with _mytildelog_ (see below) to generate your full tildelog page.
+
+#### templates
+
+Your template should look like this.
+
+```html
+{{define "mytildelog"}}
+<html>
+	<head>
+		<title>My ~log!</title>
+	</head>
+	<body>
+		<h1>~log</h1>
+		<p>Welcome to my ~log.</p>
+		{{template "log" .}}
+	</body>
+</html>
+{{end}}
+```
 
 ## code
 Use **code** to generate a list of files contained within a given directory under their home folder. This was originally made to see who had a **Code** directory (this is the default), but you can specify whatever common directory you'd like to find. Do this:
