@@ -4,6 +4,7 @@ import (
 	"os"
 	"fmt"
 	"time"
+	"flag"
 	"sort"
 	"bufio"
 	"strconv"
@@ -11,11 +12,17 @@ import (
 	"text/template"
 )
 
+const scores = "/home/krowbar/Code/irc/tildescores.txt"
+
 func main() {
 	fmt.Println("Starting...")
 
+	// Get any arguments
+	outPtr := flag.String("o", "tildescores", "Output file name")
+	flag.Parse()
+
 	headers := []string{ "User", "Tildes", "Last Collection" }
-	generate("tilde collectors", sortScore(readData("/home/krowbar/Code/irc/tildescores.txt", "&^%", headers)), "tildes")
+	generate("tilde collectors", sortScore(readData(scores, "&^%", headers)), *outPtr)
 }
 
 type Table struct {
