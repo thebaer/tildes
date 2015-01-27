@@ -14,12 +14,14 @@
 
 		<table>
 			<tr>
+				<th>&nbsp;</th>
 				{{range .Table.Headers}}
 				<th>{{.}}</th>
 				{{end}}
 			</tr>
-			{{range .Table.Rows}}
+			{{range $i, $r := .Table.Rows}}
 			<tr>
+				<td>{{add $i 1}}</td>
 				{{range .Data}}
 				<td>{{.}}</td>
 				{{end}}

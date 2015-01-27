@@ -108,6 +108,10 @@ type Page struct {
 	UpdatedForHumans string
 }
 
+func add(x, y int) int {
+	return x + y
+}
+
 func generate(title string, table *Table, outputFile string) {
 	fmt.Println("Generating page.")
 
@@ -118,8 +122,12 @@ func generate(title string, table *Table, outputFile string) {
 	
 	defer f.Close()
 
+	funcMap := template.FuncMap {
+		"add": add,
+	}
+
 	w := bufio.NewWriter(f)
-	template, err := template.ParseFiles("templates/table.html")
+	template, err := template.New("").Funcs(funcMap).ParseFiles("templates/table.html")
 	if err != nil {
 		panic(err)
 	}
