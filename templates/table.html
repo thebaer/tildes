@@ -1,0 +1,31 @@
+{{define "table"}}
+<html>
+	<head>
+
+		<title>{{.Title}}</title>
+
+		<link type="text/css" rel="stylesheet" href="tilde.css" />
+
+	</head>
+	<body id="hello">
+
+		<h1>{{.Title}}</h1>
+		<p>Last Updated: <time datetime="{{.Updated}}">{{.UpdatedForHumans}}</time></p>
+
+		<table>
+			<tr>
+				{{range .Table.Headers}}
+				<th>{{.}}</th>
+				{{end}}
+			</tr>
+			{{range .Table.Rows}}
+			<tr>
+				{{range .Data}}
+				<td>{{.}}</td>
+				{{end}}
+			</tr>
+			{{end}}
+		</table>
+	</body>
+</html>
+{{end}}
