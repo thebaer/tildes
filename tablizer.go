@@ -70,6 +70,14 @@ func sortScore(table *Table) *Table {
 	return table
 }
 
+func parseTimestamp(ts string) time.Time {
+	t, err := strconv.ParseInt(ts, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+	return time.Unix(t, 0)
+}
+
 func readData(path string, delimiter string, headers []string) *Table {
 	f, _ := os.Open(path)
 	
@@ -80,8 +88,11 @@ func readData(path string, delimiter string, headers []string) *Table {
 	s := bufio.NewScanner(f)
 	s.Split(bufio.ScanLines)
 
+	const layout = "Jan 2, 2006 3:04pm MST"
 	for s.Scan() {
 		data := strings.Split(s.Text(), delimiter)
+		t := parseTimestamp(data[2])
+		data[2] = t.UTC().Format(layout)
 		row := &Row{Data: data}
 		rows = append(rows, *row)
 	}
