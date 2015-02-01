@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"os/exec"
 	"fmt"
 	"time"
 	"flag"
@@ -14,6 +15,7 @@ import (
 
 var (
 	scoresPath = "/home/krowbar/Code/irc/tildescores.txt"
+	addictionData = "/home/karlen/bin/tilderoyale"
 )
 
 const (
@@ -31,6 +33,7 @@ func main() {
 
 	if *isTestPtr {
 		scoresPath = "/home/bear/tildescores.txt"
+		addictionData = "/home/bear/addicted.sh"
 	}
 
 	headers := []string{ "User", "Tildes", "Last Collected", "# Asks", "Avg.", "Last Amt." }
@@ -123,6 +126,32 @@ func checkScoreDelta(scoreRows *[]Row, deltaRows *[]Row) *[]Row {
 		so, _ := strconv.Atoi(r.Data[5])
 
 		users[r.Data[0]] = LastScore{ LastScore: score, LastUpdate: update, LastIncrement: inc, Times: times, ScoreOffset: so } 
+	}
+
+	// Fetch IRC log data
+	fmt.Println("Fetching IRC log data")
+	cmd := exec.Command(addictionData, "/home/karlen/bin/addictedtotilde -c")
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	if err := cmd.Start(); err != nil {
+		fmt.Println(err)
+	}
+
+	r := bufio.NewReader(stdout)
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		logRow := strings.Split(scanner.Text(), "\t")
+		uname := strings.TrimSpace(logRow[0])
+		u, exists := users[uname]
+		asks, _ := strconv.Atoi(strings.TrimSpace(logRow[3]))
+		if !exists {
+			u = LastScore{ ScoreOffset: 0 }
+		}
+		u.ScoreOffset = 0
+		u.Times = asks
+		users[uname] = u
 	}
 
 	for i := range *scoreRows {
