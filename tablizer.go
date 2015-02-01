@@ -33,7 +33,7 @@ func main() {
 		scoresPath = "/home/bear/tildescores.txt"
 	}
 
-	headers := []string{ "User", "Tildes", "Last Collected", "Last Amt.", "# Asks", "Avg." }
+	headers := []string{ "User", "Tildes", "Last Collected", "# Asks", "Avg.", "Last Amt." }
 
 	scoresData := readData(scoresPath, "&^%")
 	updatesData := readData(scoreDeltasPath, deltaDelimiter)
@@ -147,14 +147,6 @@ func checkScoreDelta(scoreRows *[]Row, deltaRows *[]Row) *[]Row {
 			u.LastScore = score
 			u.Times++
 		}
-
-		var lastIncStr string
-		if u.LastIncrement > -1 {
-			lastIncStr = strconv.Itoa(u.LastIncrement)
-		} else {
-			lastIncStr = "-"
-		}
-		r.Data = append(r.Data, lastIncStr)
 		
 		var asksStr string
 		if u.Times > 0 {
@@ -172,6 +164,14 @@ func checkScoreDelta(scoreRows *[]Row, deltaRows *[]Row) *[]Row {
 			avgStr = "-"
 		}
 		r.Data = append(r.Data, avgStr)
+
+		var lastIncStr string
+		if u.LastIncrement > -1 {
+			lastIncStr = strconv.Itoa(u.LastIncrement)
+		} else {
+			lastIncStr = "-"
+		}
+		r.Data = append(r.Data, lastIncStr)
 
 		users[r.Data[0]] = u
 		(*scoreRows)[i] = r
