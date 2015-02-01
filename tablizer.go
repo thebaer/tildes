@@ -185,8 +185,10 @@ func checkScoreDelta(scoreRows *[]Row, deltaRows *[]Row) *[]Row {
 
 		var avgStr string
 		if u.Times > 0 {
-			var avg float64 = float64(u.LastScore - u.ScoreOffset) / float64(u.Times)
-			avgStr = strconv.FormatFloat(avg, 'f', -1, 32)
+			avg := float64(score - u.ScoreOffset) / float64(u.Times)
+			avgStr = fmt.Sprintf("%.2f", avg)
+			avgStr = strings.TrimRight(avgStr, "0")
+			avgStr = strings.TrimRight(avgStr, ".")
 		} else {
 			avgStr = "-"
 		}
