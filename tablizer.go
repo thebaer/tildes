@@ -103,7 +103,6 @@ type LastScore struct {
 	LastIncrement int
 	Times int
 	ScoreOffset int
-	TimesOffset int
 }
 
 func checkScoreDelta(scoreRows *[]Row, deltaRows *[]Row) *[]Row {
@@ -122,9 +121,8 @@ func checkScoreDelta(scoreRows *[]Row, deltaRows *[]Row) *[]Row {
 		inc, _ := strconv.Atoi(r.Data[3])
 		times, _ := strconv.Atoi(r.Data[4])
 		so, _ := strconv.Atoi(r.Data[5])
-		to, _ := strconv.Atoi(r.Data[6])
 
-		users[r.Data[0]] = LastScore{ LastScore: score, LastUpdate: update, LastIncrement: inc, Times: times, ScoreOffset: so, TimesOffset: to } 
+		users[r.Data[0]] = LastScore{ LastScore: score, LastUpdate: update, LastIncrement: inc, Times: times, ScoreOffset: so } 
 	}
 
 	for i := range *scoreRows {
@@ -136,7 +134,7 @@ func checkScoreDelta(scoreRows *[]Row, deltaRows *[]Row) *[]Row {
 
 		// Fill in any missing users
 		if !exists {
-			u = LastScore{ LastScore: score, LastIncrement: -1, LastUpdate: update, Times: 0, ScoreOffset: score, TimesOffset: 0 }
+			u = LastScore{ LastScore: score, LastIncrement: -1, LastUpdate: update, Times: 0, ScoreOffset: score }
 			users[r.Data[0]] = u
 		}
 
@@ -185,7 +183,7 @@ func checkScoreDelta(scoreRows *[]Row, deltaRows *[]Row) *[]Row {
 	defer f.Close()
 
 	for k, v := range users {
-		userData := fmt.Sprintf("%d%s%d%s%d%s%d%s%d%s%d", v.LastScore, deltaDelimiter, v.LastUpdate, deltaDelimiter, v.LastIncrement, deltaDelimiter, v.Times, deltaDelimiter, v.ScoreOffset, deltaDelimiter, v.TimesOffset)
+		userData := fmt.Sprintf("%d%s%d%s%d%s%d%s%d", v.LastScore, deltaDelimiter, v.LastUpdate, deltaDelimiter, v.LastIncrement, deltaDelimiter, v.Times, deltaDelimiter, v.ScoreOffset)
 		_, err = f.WriteString(fmt.Sprintf("%s%s%s\n", k, deltaDelimiter, userData))
 		if err != nil {
 			fmt.Println(err)
