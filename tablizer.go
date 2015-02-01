@@ -12,7 +12,11 @@ import (
 	"text/template"
 )
 
-const scores = "/home/krowbar/Code/irc/tildescores.txt"
+const (
+	scores = "/home/krowbar/Code/irc/tildescores.txt"
+	scoreDeltasPath = "/home/bear/scoredeltas.txt"
+	deltaDelimiter = "+++"
+)
 
 func main() {
 	fmt.Println("Starting...")
@@ -21,8 +25,15 @@ func main() {
 	outPtr := flag.String("o", "tildescores", "Output file name")
 	flag.Parse()
 
-	headers := []string{ "User", "Tildes", "Last Collection" }
-	generate("tilde collectors", sortScore(readData(scores, "&^%", headers)), *outPtr)
+	headers := []string{ "User", "Tildes", "Last Collected", "Last Amt.", "# Asks", "Avg." }
+
+	scoresData := readData(scores, "&^%")
+	updatesData := readData(scoreDeltasPath, deltaDelimiter)
+
+	scoresData = checkScoreDelta(scoresData, updatesData)
+	scoresTable := buildScoresTable(scoresData, headers)
+
+	generate("tilde collectors", sortScore(scoresTable), *outPtr)
 }
 
 type Table struct {
@@ -78,27 +89,136 @@ func parseTimestamp(ts string) time.Time {
 	return time.Unix(t, 0)
 }
 
-func readData(path string, delimiter string, headers []string) *Table {
+type LastScore struct {
+	LastUpdate int
+	LastScore int
+	LastIncrement int
+	Times int
+	ScoreOffset int
+	TimesOffset int
+}
+
+func checkScoreDelta(scoreRows *[]Row, deltaRows *[]Row) *[]Row {
+	users := make(map[string]LastScore)
+
+	// Read score delta data
+	for i := range *deltaRows {
+		r := (*deltaRows)[i]
+
+		if len(r.Data) < 4 {
+			break
+		}
+
+		score, _ := strconv.Atoi(r.Data[1])
+		update, _ := strconv.Atoi(r.Data[2])
+		inc, _ := strconv.Atoi(r.Data[3])
+		times, _ := strconv.Atoi(r.Data[4])
+		so, _ := strconv.Atoi(r.Data[5])
+		to, _ := strconv.Atoi(r.Data[6])
+
+		users[r.Data[0]] = LastScore{ LastScore: score, LastUpdate: update, LastIncrement: inc, Times: times, ScoreOffset: so, TimesOffset: to } 
+	}
+
+	for i := range *scoreRows {
+		r := (*scoreRows)[i]
+		u, exists := users[r.Data[0]]
+
+		score, _ := strconv.Atoi(r.Data[1])
+		update, _ := strconv.Atoi(r.Data[2])
+
+		// Fill in any missing users
+		if !exists {
+			u = LastScore{ LastScore: score, LastIncrement: -1, LastUpdate: update, Times: 0, ScoreOffset: score, TimesOffset: 0 }
+			users[r.Data[0]] = u
+		}
+
+		// Match up "last collection" with rest of table data
+		if update > u.LastUpdate {
+			u.LastIncrement = score - u.LastScore
+			u.LastUpdate = update
+			u.LastScore = score
+			u.Times++
+		}
+
+		var lastIncStr string
+		if u.LastIncrement > -1 {
+			lastIncStr = strconv.Itoa(u.LastIncrement)
+		} else {
+			lastIncStr = "-"
+		}
+		r.Data = append(r.Data, lastIncStr)
+		
+		var asksStr string
+		if u.Times > 0 {
+			asksStr = strconv.Itoa(u.Times)
+		} else {
+			asksStr = "-"
+		}
+		r.Data = append(r.Data, asksStr)
+
+		var avgStr string
+		if u.Times > 0 {
+			var avg float64 = float64(u.LastScore - u.ScoreOffset) / float64(u.Times)
+			avgStr = strconv.FormatFloat(avg, 'f', -1, 32)
+		} else {
+			avgStr = "-"
+		}
+		r.Data = append(r.Data, avgStr)
+
+		users[r.Data[0]] = u
+		(*scoreRows)[i] = r
+	}
+
+	// Write deltas
+	f, err := os.OpenFile(scoreDeltasPath, os.O_CREATE | os.O_RDWR, 0644)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer f.Close()
+
+	for k, v := range users {
+		userData := fmt.Sprintf("%d%s%d%s%d%s%d%s%d%s%d", v.LastScore, deltaDelimiter, v.LastUpdate, deltaDelimiter, v.LastIncrement, deltaDelimiter, v.Times, deltaDelimiter, v.ScoreOffset, deltaDelimiter, v.TimesOffset)
+		_, err = f.WriteString(fmt.Sprintf("%s%s%s\n", k, deltaDelimiter, userData))
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	return scoreRows
+}
+
+func buildScoresTable(rows *[]Row, headers []string) *Table {
+	table := &Table{Headers: headers, Rows: nil}
+
+	const layout = "Jan 2, 2006 3:04pm MST"
+	for i, r := range *rows {
+		data := r.Data
+		t := parseTimestamp(r.Data[2])
+		r.Data[2] = t.UTC().Format(layout)
+		row := &Row{Data: data}
+		(*rows)[i] = *row
+	}
+	table.Rows = *rows
+
+	return table
+}
+
+func readData(path string, delimiter string) *[]Row {
 	f, _ := os.Open(path)
 	
 	defer f.Close()
 
 	rows := []Row{}
-	table := &Table{Headers: headers, Rows: nil}
 	s := bufio.NewScanner(f)
 	s.Split(bufio.ScanLines)
 
-	const layout = "Jan 2, 2006 3:04pm MST"
 	for s.Scan() {
 		data := strings.Split(s.Text(), delimiter)
-		t := parseTimestamp(data[2])
-		data[2] = t.UTC().Format(layout)
 		row := &Row{Data: data}
 		rows = append(rows, *row)
 	}
-	table.Rows = rows
 
-	return table
+	return &rows
 }
 
 type Page struct {
