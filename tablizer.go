@@ -36,7 +36,7 @@ func main() {
 		addictionData = "/home/bear/addicted.sh"
 	}
 
-	headers := []string{ "User", "Tildes", "Last Collected", "# Asks", "Avg.", "Last Amt." }
+	headers := []string{ "User", "Tildes", "Last Collected", "Addiction", "# Asks", "Avg.", "Last Amt." }
 
 	scoresData := readData(scoresPath, "&^%")
 	updatesData := readData(scoreDeltasPath, deltaDelimiter)
@@ -100,12 +100,37 @@ func parseTimestamp(ts string) time.Time {
 	return time.Unix(t, 0)
 }
 
+func trimTrailingZeros(n float64) string {
+	return strings.TrimRight(strings.TrimRight(fmt.Sprintf("%.2f", n), "0"), ".")
+}
+
+func trimTrailingZerosShort(n float64) string {
+	return strings.TrimRight(strings.TrimRight(fmt.Sprintf("%.1f", n), "0"), ".")
+}
+
+func niceTime(sec int) string {
+	if sec == 0 {
+		return "-"
+	}
+
+	if sec < 60 {
+		return fmt.Sprintf("%dsec", sec)
+	} else if sec < 3600 {
+		return fmt.Sprintf("%smin", trimTrailingZerosShort(float64(sec) / 60.0))
+	} else if sec < 86400 {
+		return fmt.Sprintf("%shr", trimTrailingZerosShort(float64(sec) / 3600.0))
+	} else {
+		return fmt.Sprintf("%sdy", trimTrailingZerosShort(float64(sec) / 86400.0))
+	}
+}
+
 type LastScore struct {
 	LastUpdate int
 	LastScore int
 	LastIncrement int
 	Times int
 	ScoreOffset int
+	Addiction int
 }
 
 func checkScoreDelta(scoreRows *[]Row, deltaRows *[]Row) *[]Row {
@@ -143,27 +168,36 @@ func checkScoreDelta(scoreRows *[]Row, deltaRows *[]Row) *[]Row {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		logRow := strings.Split(scanner.Text(), "\t")
+
 		uname := strings.TrimSpace(logRow[0])
-		u, exists := users[uname]
 		asks, _ := strconv.Atoi(strings.TrimSpace(logRow[3]))
+		addiction, _ := strconv.Atoi(strings.TrimSpace(logRow[1]))
+
+		u, exists := users[uname]
 		if !exists {
 			u = LastScore{ ScoreOffset: 0 }
 		}
 		u.ScoreOffset = 0
 		u.Times = asks
+		u.Addiction = addiction
+
+		fmt.Println(fmt.Sprintf("%d", u.Times))
 		users[uname] = u
 	}
 
+	// Add in scores data
+	fmt.Println(fmt.Sprintf("Reading scores data on %d users", len(*scoreRows)))
 	for i := range *scoreRows {
 		r := (*scoreRows)[i]
 		u, exists := users[r.Data[0]]
+		fmt.Println(u)
 
 		score, _ := strconv.Atoi(r.Data[1])
 		update, _ := strconv.Atoi(r.Data[2])
 
 		// Fill in any missing users
 		if !exists {
-			u = LastScore{ LastScore: score, LastIncrement: -1, LastUpdate: update, Times: 0, ScoreOffset: score }
+			u = LastScore{ LastScore: score, LastIncrement: -1, LastUpdate: update, Times: 0, ScoreOffset: score, Addiction: 0 }
 			users[r.Data[0]] = u
 		}
 
@@ -174,6 +208,8 @@ func checkScoreDelta(scoreRows *[]Row, deltaRows *[]Row) *[]Row {
 			u.LastScore = score
 			u.Times++
 		}
+
+		r.Data = append(r.Data, niceTime(u.Addiction))
 		
 		var asksStr string
 		if u.Times > 0 {
@@ -186,9 +222,7 @@ func checkScoreDelta(scoreRows *[]Row, deltaRows *[]Row) *[]Row {
 		var avgStr string
 		if u.Times > 0 {
 			avg := float64(score - u.ScoreOffset) / float64(u.Times)
-			avgStr = fmt.Sprintf("%.2f", avg)
-			avgStr = strings.TrimRight(avgStr, "0")
-			avgStr = strings.TrimRight(avgStr, ".")
+			avgStr = trimTrailingZeros(avg)
 		} else {
 			avgStr = "-"
 		}
