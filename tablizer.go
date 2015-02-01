@@ -12,8 +12,11 @@ import (
 	"text/template"
 )
 
+var (
+	scoresPath = "/home/krowbar/Code/irc/tildescores.txt"
+)
+
 const (
-	scores = "/home/krowbar/Code/irc/tildescores.txt"
 	scoreDeltasPath = "/home/bear/scoredeltas.txt"
 	deltaDelimiter = "+++"
 )
@@ -23,11 +26,16 @@ func main() {
 
 	// Get any arguments
 	outPtr := flag.String("o", "tildescores", "Output file name")
+	isTestPtr := flag.Bool("t", false, "Specifies we're developing")
 	flag.Parse()
+
+	if *isTestPtr {
+		scoresPath = "/home/bear/tildescores.txt"
+	}
 
 	headers := []string{ "User", "Tildes", "Last Collected", "Last Amt.", "# Asks", "Avg." }
 
-	scoresData := readData(scores, "&^%")
+	scoresData := readData(scoresPath, "&^%")
 	updatesData := readData(scoreDeltasPath, deltaDelimiter)
 
 	scoresData = checkScoreDelta(scoresData, updatesData)
