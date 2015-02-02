@@ -65,7 +65,7 @@ func mapFiles(files *[]string, users map[string]User) {
 		fname := filepath.Base(path)
 
 		// Exclude certain file names
-		if strings.HasPrefix(fname, ".") || strings.HasSuffix(fname, ".log") || strings.HasSuffix(fname, "~") {
+		if strings.HasPrefix(fname, ".") || strings.HasSuffix(fname, ".log") || strings.HasPrefix(fname, "README") || strings.HasSuffix(fname, "~") {
 			continue
 		}
 
