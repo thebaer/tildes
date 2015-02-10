@@ -5,6 +5,20 @@
 		<title>{{.FolderName}} on {{.Host}}</title>
 
 		<link type="text/css" rel="stylesheet" href="tilde.css" />
+		<style type="text/css">
+		.dir {
+			font-weight: bold;
+			color: #00BFFF;
+		}
+		.file.exec {
+			font-weight: bold;
+			color: #FFD700;
+		}
+		.fullDir {
+			color: #aaa;
+			font-size: 0.9em;
+		}
+		</style>
 
 	</head>
 	<body id="hello">
@@ -17,7 +31,7 @@
 		<div class="links">
 			<ul class="links">
 				{{range .Projects}}
-				<li><strong>{{.Name}}</strong> &middot; {{.Path}}</li>
+				<li><span class="{{.CssClass}}">{{.Name}}</span> <span class="fullDir">&middot; {{.Path}}</span></li>
 				{{end}}
 			</ul>
 		</div>

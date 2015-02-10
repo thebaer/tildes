@@ -38,6 +38,7 @@ type User struct {
 type Project struct {
 	Name string
 	Path string
+	CssClass string
 }
 
 func findProjects() map[string]User {
@@ -72,11 +73,25 @@ func mapFiles(files *[]string, users map[string]User) {
 		// Ensure file is other-readable
 		// TODO: just detect if we can actually read this, instead
 		info, _ := os.Stat(path)
-		if info.Mode() & 0004 == 0 {
+		mode := info.Mode()
+		if mode & 0004 == 0 {
 			continue
 		}
 
-		proj := &Project{Name: fname, Path: strings.Replace(path, "/home/", "~", -1)}
+		// Mark directories vs. regular files
+		cssClass := "file"
+		if mode.IsDir() {
+			path = path + "/"
+			fname = fname + "/"
+			cssClass = "dir"
+		}
+
+		// Check if files are executable by all
+		if mode & 0001 != 0 {
+			cssClass = cssClass + " exec"
+		}
+
+		proj := &Project{Name: fname, Path: strings.Replace(path, "/home/", "~", -1), CssClass: cssClass}
 		u, exists := users[uname]
 		if !exists {
 			fmt.Printf("Found %s for ~%s.\n", pparts[3], uname)
