@@ -8,9 +8,14 @@
 		<style type="text/css">
 		div.user {
 			margin: 0;
+			width: 50em;
 		}
 		div.user h2 {
 			margin: 0;
+		}
+		span.time {
+			float: right;
+			color: #999;
 		}
 		</style>
 
@@ -23,7 +28,7 @@
 
 		{{range .Users}}
 		<div class="user">
-			<h2><a href="/~{{.Name}}/">~{{.Name}}</a></h2> <span class="location">{{Location .Region .Country}}</span>
+			<h2><a href="/~{{.Name}}/">~{{.Name}}</a></h2> <span class="location">{{Location .Region .Country}} </span> <span class="time">{{.CurrentTime}}</span>
 		</div>
 		{{end}}
 

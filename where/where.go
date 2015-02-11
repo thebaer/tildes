@@ -37,6 +37,7 @@ type User struct {
 	IP string
 	Region string
 	Country string
+	CurrentTime string
 }
 
 var ipRegex = regexp.MustCompile("(([0-9]{1,3}[.-]){3}[0-9]{1,3})")
@@ -85,6 +86,26 @@ func who() []User {
 	return users
 }
 
+func getTimeInZone(tz string) string {
+	cmd := exec.Command("date", "+%A %H:%M")
+	cmd.Env = append(cmd.Env, fmt.Sprintf("TZ=%s", tz))
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	if err := cmd.Start(); err != nil {
+		fmt.Println(err)
+	}
+
+	r := bufio.NewReader(stdout)
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		return scanner.Text()
+	}
+	return ""
+}
+
 func getGeo(u *User) {
 	fmt.Printf("Fetching %s location...\n", u.Name)
 
@@ -109,6 +130,7 @@ func getGeo(u *User) {
 		region := dat["region_name"].(string)
 		country := dat["country_name"].(string)
 
+		u.CurrentTime = getTimeInZone(dat["time_zone"].(string))
 		u.Region = region
 		u.Country = country
     }
