@@ -318,7 +318,7 @@ func generate(title string, table *Table, outputFile string) {
 	}
 
 	w := bufio.NewWriter(f)
-	template, err := template.New("").Funcs(funcMap).ParseFiles("templates/table.html")
+	template, err := template.New("").Funcs(funcMap).ParseFiles("../templates/scores.html")
 	if err != nil {
 		panic(err)
 	}
