@@ -1,0 +1,32 @@
+{{define "where"}}
+<html>
+	<head>
+
+		<title>$ where</title>
+
+		<link type="text/css" rel="stylesheet" href="tilde.css" />
+		<style type="text/css">
+		div.user {
+			margin: 0;
+		}
+		div.user h2 {
+			margin: 0;
+		}
+		</style>
+
+	</head>
+	<body id="hello" class="user-list">
+
+		<h1>$ where</h1> <span class="updated"><a href="/~bear/">&uarr; up</a></span>
+
+		<p>Last Updated: <time datetime="{{.Updated}}">{{.UpdatedForHumans}}</time></p>
+
+		{{range .Users}}
+		<div class="user">
+			<h2><a href="/~{{.Name}}/">~{{.Name}}</a></h2> <span class="location">{{Location .Region .Country}}</span>
+		</div>
+		{{end}}
+
+	</body>
+</html>
+{{end}}
