@@ -10,11 +10,13 @@ import (
 	"bufio"
 	"strconv"
 	"strings"
+	"io/ioutil"
 	"text/template"
 )
 
 var (
 	scoresPath = "/home/krowbar/Code/irc/tildescores.txt"
+	jackpotPath = "/home/krowbar/Code/irc/tildejackpot.txt"
 	addictionData = "/home/karlen/bin/tilderoyale"
 )
 
@@ -33,6 +35,7 @@ func main() {
 
 	if *isTestPtr {
 		scoresPath = "/home/bear/tildescores.txt"
+		jackpotPath = "/home/bear/tildejackpot.txt"
 		addictionData = "/home/bear/addicted.sh"
 	}
 
@@ -44,7 +47,7 @@ func main() {
 	scoresData = checkScoreDelta(scoresData, updatesData)
 	scoresTable := buildScoresTable(scoresData, headers)
 
-	generate("tilde collectors", sortScore(scoresTable), *outPtr)
+	generate("tilde collectors", getFile(jackpotPath), sortScore(scoresTable), *outPtr)
 }
 
 type Table struct {
@@ -292,18 +295,29 @@ func readData(path string, delimiter string) *[]Row {
 	return &rows
 }
 
+func getFile(path string) string {
+	f, err := ioutil.ReadFile(path)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+
+	return string(f)
+}
+
 type Page struct {
 	Title string
 	Table Table
 	Updated string
 	UpdatedForHumans string
+	Jackpot int
 }
 
 func add(x, y int) int {
 	return x + y
 }
 
-func generate(title string, table *Table, outputFile string) {
+func generate(title, jackpot string, table *Table, outputFile string) {
 	fmt.Println("Generating page.")
 
 	f, err := os.Create(os.Getenv("HOME") + "/public_html/" + outputFile + ".html")
@@ -328,8 +342,15 @@ func generate(title string, table *Table, outputFile string) {
 	updatedReadable := curTime.Format(time.RFC1123)
 	updated := curTime.Format(time.RFC3339)
 
+	// Jackpot parsing
+	jp, err := strconv.Atoi(jackpot)
+	if err != nil {
+		fmt.Println(err)
+		jp = -1
+	}
+
 	// Generate the page
-	page := &Page{Title: title, Table: *table, UpdatedForHumans: updatedReadable, Updated: updated}
+	page := &Page{Title: title, Table: *table, UpdatedForHumans: updatedReadable, Updated: updated, Jackpot: jp}
 	template.ExecuteTemplate(w, "table", page)
 	w.Flush()
 
