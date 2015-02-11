@@ -47,7 +47,7 @@ func main() {
 	scoresData = checkScoreDelta(scoresData, updatesData)
 	scoresTable := buildScoresTable(scoresData, headers)
 
-	generate("tilde collectors", getFile(jackpotPath), sortScore(scoresTable), *outPtr)
+	generate("!tilde scores", getFile(jackpotPath), sortScore(scoresTable), *outPtr)
 }
 
 type Table struct {
