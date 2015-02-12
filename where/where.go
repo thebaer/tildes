@@ -109,17 +109,17 @@ func getTimeInZone(tz string) string {
 func getGeo(u *User) {
 	fmt.Printf("Fetching %s location...\n", u.Name)
 
-    response, err := http.Get(fmt.Sprintf("https://freegeoip.net/json/%s", u.IP))
-    if err != nil {
-        fmt.Printf("%s", err)
-        os.Exit(1)
-    } else {
-        defer response.Body.Close()
-        contents, err := ioutil.ReadAll(response.Body)
-        if err != nil {
-            fmt.Printf("%s", err)
-            os.Exit(1)
-        }
+	response, err := http.Get(fmt.Sprintf("https://freegeoip.net/json/%s", u.IP))
+	if err != nil {
+		fmt.Printf("%s", err)
+		os.Exit(1)
+	} else {
+		defer response.Body.Close()
+		contents, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			fmt.Printf("%s", err)
+			os.Exit(1)
+		}
 
 		var dat map[string]interface{}
 
@@ -133,7 +133,7 @@ func getGeo(u *User) {
 		u.CurrentTime = getTimeInZone(dat["time_zone"].(string))
 		u.Region = region
 		u.Country = country
-    }
+	}
 }
 
 func prettyLocation(region, country string) string {
