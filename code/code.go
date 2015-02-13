@@ -151,7 +151,7 @@ func generate(users map[string]User, outputFile string) {
 	}
 	
 	w := bufio.NewWriter(f)
-	template, err := template.New("").Funcs(funcMap).ParseFiles("templates/code.html")
+	template, err := template.New("").Funcs(funcMap).ParseFiles("../templates/code.html")
 	if err != nil {
 		panic(err)
 	}
