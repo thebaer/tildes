@@ -30,20 +30,20 @@ func main() {
 	}
 }
 
-type User struct {
+type user struct {
 	Name string
-	Projects []Project
+	Projects []project
 }
 
-type Project struct {
+type project struct {
 	Name string
 	Path string
-	CssClass string
+	CSSClass string
 }
 
-func findProjects() map[string]User {
+func findProjects() map[string]user {
 	var files []string
-	users := make(map[string]User)
+	users := make(map[string]user)
 
 	if len(searchDirs) > 1 {
 		for _, d := range searchDirs {
@@ -59,7 +59,7 @@ func findProjects() map[string]User {
 	return users
 }
 
-func mapFiles(files *[]string, users map[string]User) {
+func mapFiles(files *[]string, users map[string]user) {
 	for _, path := range *files {
 		pparts := strings.Split(path, "/")
 		uname := pparts[2]
@@ -91,12 +91,12 @@ func mapFiles(files *[]string, users map[string]User) {
 			cssClass = cssClass + " exec"
 		}
 
-		proj := &Project{Name: fname, Path: strings.Replace(path, "/home/", "~", -1), CssClass: cssClass}
+		proj := &project{Name: fname, Path: strings.Replace(path, "/home/", "~", -1), CSSClass: cssClass}
 		u, exists := users[uname]
 		if !exists {
 			fmt.Printf("Found %s for ~%s.\n", pparts[3], uname)
-			projs := []Project{*proj}
-			u = User{Name: uname, Projects: projs}
+			projs := []project{*proj}
+			u = user{Name: uname, Projects: projs}
 		} else {
 			u.Projects = append(u.Projects, *proj)
 		}
@@ -104,11 +104,11 @@ func mapFiles(files *[]string, users map[string]User) {
 	}
 }
 
-type Page struct {
+type page struct {
 	FolderName string
 	Folders []string
 	Host string
-	Users map[string]User
+	Users map[string]user
 	Updated string
 	UpdatedForHumans string
 }
@@ -118,12 +118,12 @@ func graphicalName(n string) string {
 	return r.Replace(n)
 }
 
-func Split(s string, d string) []string {
+func split(s string, d string) []string {
 	arr := strings.Split(s, d)
 	return arr
 }
 
-func ListDirs(dirs []string) string {
+func listDirs(dirs []string) string {
 	if len(dirs) > 1 {
 		for i := 0; i < len(dirs); i++ {
 			d := dirs[i]
@@ -135,7 +135,7 @@ func ListDirs(dirs []string) string {
 	return fmt.Sprintf("<strong>%s</strong>", dirs[0])
 }
 
-func generate(users map[string]User, outputFile string) {
+func generate(users map[string]user, outputFile string) {
 	fmt.Println("Generating page.")
 
 	f, err := os.Create(os.Getenv("HOME") + "/public_html/" + strings.ToLower(outputFile) + ".html")
@@ -146,8 +146,8 @@ func generate(users map[string]User, outputFile string) {
 	defer f.Close()
 
 	funcMap := template.FuncMap {
-		"Split": Split,
-		"ListDirs": ListDirs,
+		"Split": split,
+		"ListDirs": listDirs,
 	}
 	
 	w := bufio.NewWriter(f)
@@ -163,8 +163,8 @@ func generate(users map[string]User, outputFile string) {
 	updated := curTime.Format(time.RFC3339)
 
 	// Generate the page
-	page := &Page{FolderName: searchDirs[0], Folders: searchDirs, Host: graphicalName(host), UpdatedForHumans: updatedReadable, Updated: updated, Users: users}
-	template.ExecuteTemplate(w, "code", page)
+	p := &page{FolderName: searchDirs[0], Folders: searchDirs, Host: graphicalName(host), UpdatedForHumans: updatedReadable, Updated: updated, Users: users}
+	template.ExecuteTemplate(w, "code", p)
 	w.Flush()
 
 	fmt.Println("DONE!")
