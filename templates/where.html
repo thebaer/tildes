@@ -12,10 +12,23 @@
 		}
 		div.user h2 {
 			margin: 0;
+			padding: 4px 0;
+		}
+		div.user h2 a {
+			padding-top: 4px;
+			padding-bottom: 4px;
 		}
 		span.time {
+			margin-top: 10px;
 			float: right;
 			color: #999;
+		}
+		iframe {
+			width: 100%;
+			height: 50em;
+		}
+		p.emph {
+			font-size: 1.2em;
 		}
 		</style>
 
@@ -26,11 +39,16 @@
 
 		<p>Last Updated: <time datetime="{{.Updated}}">{{.UpdatedForHumans}}</time></p>
 
+		<p class="emph">Users online now:</p>
 		{{range .Users}}
 		<div class="user">
 			<h2><a href="/~{{.Name}}/">~{{.Name}}</a></h2> <span class="location">{{Location .Region .Country}} </span> <span class="time">{{.CurrentTime}}</span>
 		</div>
 		{{end}}
+
+		<p class="emph" style="margin-top: 2em; margin-bottom: 1em;">All users - <a href="/~bear/map.html">full map</a> | <a href="/~bear/where.json">data</a></p>
+		<iframe src="/~bear/map.html"></iframe>
+
 
 	</body>
 </html>
