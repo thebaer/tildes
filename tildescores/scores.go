@@ -12,6 +12,8 @@ import (
 	"strings"
 	"io/ioutil"
 	"text/template"
+
+	"github.com/thebaer/tildes/store"
 )
 
 var (
@@ -41,8 +43,8 @@ func main() {
 
 	headers := []string{ "User", "Tildes", "Last Collected", "Addiction", "# Asks", "Avg.", "Last Amt." }
 
-	scoresData := readData(scoresPath, "&^%")
-	updatesData := readData(scoreDeltasPath, deltaDelimiter)
+	scoresData := store.ReadRows(scoresPath, "&^%")
+	updatesData := store.ReadRows(scoreDeltasPath, deltaDelimiter)
 
 	scoresData = checkScoreDelta(scoresData, updatesData)
 	scoresTable := buildScoresTable(scoresData, headers)
@@ -52,15 +54,11 @@ func main() {
 
 type Table struct {
 	Headers []string
-	Rows []Row
+	Rows []store.Row
 }
 
-type Row struct {
-	Data []string
-}
-
-type By func(r1, r2 *Row) bool
-func (by By) Sort(rows []Row) {
+type By func(r1, r2 *store.Row) bool
+func (by By) Sort(rows []store.Row) {
 	rs := &rowSorter {
 		rows: rows,
 		by: by,
@@ -68,8 +66,8 @@ func (by By) Sort(rows []Row) {
 	sort.Sort(rs)
 }
 type rowSorter struct {
-	rows []Row
-	by func(r1, r2 *Row) bool
+	rows []store.Row
+	by func(r1, r2 *store.Row) bool
 }
 func (r *rowSorter) Len() int {
 	return len(r.rows)
@@ -82,12 +80,12 @@ func (r *rowSorter) Less(i, j int) bool {
 }
 
 func sortScore(table *Table) *Table {
-	score := func(r1, r2 *Row) bool {
+	score := func(r1, r2 *store.Row) bool {
 		s1, _ := strconv.Atoi(r1.Data[1])
 		s2, _ := strconv.Atoi(r2.Data[1])
 		return s1 < s2
 	}
-	decScore := func(r1, r2 *Row) bool {
+	decScore := func(r1, r2 *store.Row) bool {
 		return !score(r1, r2)
 	}
 	By(decScore).Sort(table.Rows)
@@ -136,7 +134,7 @@ type LastScore struct {
 	Addiction int
 }
 
-func checkScoreDelta(scoreRows *[]Row, deltaRows *[]Row) *[]Row {
+func checkScoreDelta(scoreRows, deltaRows *[]store.Row) *[]store.Row {
 	users := make(map[string]LastScore)
 
 	// Read score delta data
@@ -261,38 +259,20 @@ func checkScoreDelta(scoreRows *[]Row, deltaRows *[]Row) *[]Row {
 	return scoreRows
 }
 
-func buildScoresTable(rows *[]Row, headers []string) *Table {
-	table := &Table{Headers: headers, Rows: nil}
+func buildScoresTable(rows *[]store.Row, headers []string) *Table {
+	t := &Table{Headers: headers, Rows: nil}
 
 	const layout = "Jan 2, 2006 3:04pm MST"
 	for i, r := range *rows {
 		data := r.Data
-		t := parseTimestamp(r.Data[2])
-		r.Data[2] = t.UTC().Format(layout)
-		row := &Row{Data: data}
-		(*rows)[i] = *row
+		time := parseTimestamp(r.Data[2])
+		r.Data[2] = time.UTC().Format(layout)
+		outRow := &store.Row{Data: data}
+		(*rows)[i] = *outRow
 	}
-	table.Rows = *rows
+	t.Rows = *rows
 
-	return table
-}
-
-func readData(path string, delimiter string) *[]Row {
-	f, _ := os.Open(path)
-	
-	defer f.Close()
-
-	rows := []Row{}
-	s := bufio.NewScanner(f)
-	s.Split(bufio.ScanLines)
-
-	for s.Scan() {
-		data := strings.Split(s.Text(), delimiter)
-		row := &Row{Data: data}
-		rows = append(rows, *row)
-	}
-
-	return &rows
+	return t
 }
 
 func getFile(path string) string {
