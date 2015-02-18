@@ -49,6 +49,10 @@
 		<p class="emph" style="margin-top: 2em; margin-bottom: 1em;">All users - <a href="/~bear/map.html">full map</a> | <a href="/~bear/where.json">data</a></p>
 		<iframe src="/~bear/map.html"></iframe>
 
+		<h3>How does it work?</h3>
+		<p>Every 15 minutes this program runs `who --ips` and looks up geo info on any IPs it can, hits Google's geocode API to get some more general coordinates, which adds to <a href="where.json">this data</a> for <a href="map.html">this map</a>, and then generates the page you see here.</p>
+		<p>You can see for yourself in the <a href="https://github.com/thebaer/tildes/blob/master/where/where.go">GitHub project</a>, where contributions are welcome!</p>
+
 
 	</body>
 </html>
