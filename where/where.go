@@ -32,7 +32,7 @@ func main() {
 	generate(users, *outFilePtr)
 }
 
-type User struct {
+type user struct {
 	Name string
 	IP string
 	Region string
@@ -42,7 +42,7 @@ type User struct {
 
 var ipRegex = regexp.MustCompile("(([0-9]{1,3}[.-]){3}[0-9]{1,3})")
 
-func who() []User {
+func who() []user {
 	fmt.Println("who --ips")
 
 	cmd := exec.Command("who", "--ips")
@@ -76,10 +76,10 @@ func who() []User {
 		ips[newIp] = name
 	}
 
-	users := make([]User, len(ips))
+	users := make([]user, len(ips))
 	i := 0
 	for ip, name := range ips {
-		users[i] = User{Name: name, IP: ip}
+		users[i] = user{Name: name, IP: ip}
 		i++
 	}
 
@@ -106,7 +106,7 @@ func getTimeInZone(tz string) string {
 	return ""
 }
 
-func getGeo(u *User) {
+func getGeo(u *user) {
 	fmt.Printf("Fetching %s location...\n", u.Name)
 
 	response, err := http.Get(fmt.Sprintf("https://freegeoip.net/json/%s", u.IP))
@@ -143,13 +143,13 @@ func prettyLocation(region, country string) string {
 	return country
 }
 
-type Page struct {
-	Users []User
+type page struct {
+	Users []user
 	Updated string
 	UpdatedForHumans string
 }
 
-func generate(users []User, outputFile string) {
+func generate(users []user, outputFile string) {
 	fmt.Println("Generating page.")
 
 	f, err := os.Create(os.Getenv("HOME") + "/public_html/" + strings.ToLower(outputFile) + ".html")
@@ -175,8 +175,8 @@ func generate(users []User, outputFile string) {
 	updated := curTime.Format(time.RFC3339)
 
 	// Generate the page
-	page := &Page{Users: users, UpdatedForHumans: updatedReadable, Updated: updated}
-	template.ExecuteTemplate(w, "where", page)
+	p := &page{Users: users, UpdatedForHumans: updatedReadable, Updated: updated}
+	template.ExecuteTemplate(w, "where", p)
 	w.Flush()
 
 	fmt.Println("DONE!")
