@@ -13,11 +13,19 @@ import (
 	"flag"
 	"time"
 	"text/template"
+
+	"github.com/thebaer/geo"
+	"github.com/thebaer/tildes/store"
+)
+
+const (
+	locDataJSON = "/home/bear/public_html/where.json"
 )
 
 func main() {
 	// Get arguments
 	outFilePtr := flag.String("f", "where", "Outputted HTML filename (without .html)")
+	geocodeAPIKeyPtr := flag.String("k", "", "Google Geocoding API key")
 	flag.Parse()
 
 	// Get online users with `who`
@@ -26,18 +34,32 @@ func main() {
 	// Fetch user locations based on IP address
 	for i := range users {
 		getGeo(&users[i])
+		getFuzzyCoords(&users[i], *geocodeAPIKeyPtr)
 	}
+
+	// Write user coord data
+	cacheUserLocations(&users)
 
 	// Generate page
 	generate(users, *outFilePtr)
 }
 
 type user struct {
-	Name string
-	IP string
-	Region string
-	Country string
-	CurrentTime string
+	Name string `json:"name"`
+	IP string `json:"ip"`
+	Region string `json:"region"`
+	Country string `json:"country"`
+	CurrentTime string `json:"current_time"`
+	Latitude float64 `json:"lat"`
+	Longitude float64 `json:"lng"`
+}
+
+type publicUser struct {
+	Name string `json:"name"`
+	Region string `json:"region"`
+	Country string `json:"country"`
+	Latitude float64 `json:"lat"`
+	Longitude float64 `json:"lng"`
 }
 
 var ipRegex = regexp.MustCompile("(([0-9]{1,3}[.-]){3}[0-9]{1,3})")
@@ -134,6 +156,39 @@ func getGeo(u *user) {
 		u.Region = region
 		u.Country = country
 	}
+}
+
+func getFuzzyCoords(u *user, apiKey string) {
+	fmt.Printf("Fetching %s fuzzy coordinates...\n", u.Name)
+
+	loc := prettyLocation(u.Region, u.Country)
+	addr, err := geo.Geocode(loc, apiKey)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	u.Latitude = addr.Lat
+	u.Longitude = addr.Lng
+}
+
+func cacheUserLocations(users *[]user) {
+	// Read user data
+	res := &map[string]publicUser{}
+	if err := json.Unmarshal(store.ReadData(locDataJSON), &res); err != nil {
+		fmt.Println(err)
+	}
+
+	// Update user data
+	for i := range *users {
+		u := (*users)[i]
+		(*res)[u.Name] = publicUser{Name: u.Name, Region: u.Region, Country: u.Country, Latitude: u.Latitude, Longitude: u.Longitude}
+	}
+
+	// Write user data
+	json, _ := json.Marshal(res)
+	store.WriteData(locDataJSON, json)
 }
 
 func prettyLocation(region, country string) string {
