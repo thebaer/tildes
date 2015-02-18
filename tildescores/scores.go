@@ -52,7 +52,7 @@ func main() {
 	generate("!tilde scores", getFile(jackpotPath), sortScore(scoresTable), *outPtr)
 }
 
-type Table struct {
+type table struct {
 	Headers []string
 	Rows []store.Row
 }
@@ -79,7 +79,7 @@ func (r *rowSorter) Less(i, j int) bool {
 	return r.by(&r.rows[i], &r.rows[j])
 }
 
-func sortScore(table *Table) *Table {
+func sortScore(table *table) *table {
 	score := func(r1, r2 *store.Row) bool {
 		s1, _ := strconv.Atoi(r1.Data[1])
 		s2, _ := strconv.Atoi(r2.Data[1])
@@ -120,9 +120,8 @@ func niceTime(sec int) string {
 		return fmt.Sprintf("%smin", trimTrailingZerosShort(float64(sec) / 60.0))
 	} else if sec < 86400 {
 		return fmt.Sprintf("%shr", trimTrailingZerosShort(float64(sec) / 3600.0))
-	} else {
-		return fmt.Sprintf("%sdy", trimTrailingZerosShort(float64(sec) / 86400.0))
 	}
+	return fmt.Sprintf("%sdy", trimTrailingZerosShort(float64(sec) / 86400.0))
 }
 
 type LastScore struct {
@@ -259,8 +258,8 @@ func checkScoreDelta(scoreRows, deltaRows *[]store.Row) *[]store.Row {
 	return scoreRows
 }
 
-func buildScoresTable(rows *[]store.Row, headers []string) *Table {
-	t := &Table{Headers: headers, Rows: nil}
+func buildScoresTable(rows *[]store.Row, headers []string) *table {
+	t := &table{Headers: headers, Rows: nil}
 
 	const layout = "Jan 2, 2006 3:04pm MST"
 	for i, r := range *rows {
@@ -287,7 +286,7 @@ func getFile(path string) string {
 
 type Page struct {
 	Title string
-	Table Table
+	Table table
 	Updated string
 	UpdatedForHumans string
 	Jackpot int
@@ -297,7 +296,7 @@ func add(x, y int) int {
 	return x + y
 }
 
-func generate(title, jackpot string, table *Table, outputFile string) {
+func generate(title, jackpot string, table *table, outputFile string) {
 	fmt.Println("Generating page.")
 
 	f, err := os.Create(os.Getenv("HOME") + "/public_html/" + outputFile + ".html")
