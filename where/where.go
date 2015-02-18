@@ -13,6 +13,9 @@ import (
 	"flag"
 	"time"
 	"text/template"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 
 	"github.com/thebaer/geo"
 	"github.com/thebaer/tildes/store"
@@ -22,11 +25,19 @@ const (
 	locDataJSON = "/home/bear/public_html/where.json"
 )
 
+var (
+	hashKey = "~~~"
+)
+
 func main() {
 	// Get arguments
 	outFilePtr := flag.String("f", "where", "Outputted HTML filename (without .html)")
 	geocodeAPIKeyPtr := flag.String("k", "", "Google Geocoding API key")
+	hashKeyPtr := flag.String("s", "", "Secret for hashing usernames")
 	flag.Parse()
+
+	// Set globals
+	hashKey = *hashKeyPtr
 
 	// Get online users with `who`
 	users := who()
@@ -158,6 +169,13 @@ func getGeo(u *user) {
 	}
 }
 
+func computeHmac256(message string) string {
+    key := []byte(hashKey)
+    h := hmac.New(sha256.New, key)
+    h.Write([]byte(message))
+    return base64.StdEncoding.EncodeToString(h.Sum(nil))
+}
+
 func getFuzzyCoords(u *user, apiKey string) {
 	fmt.Printf("Fetching %s fuzzy coordinates...\n", u.Name)
 
@@ -183,7 +201,7 @@ func cacheUserLocations(users *[]user) {
 	// Update user data
 	for i := range *users {
 		u := (*users)[i]
-		(*res)[u.Name] = publicUser{Name: u.Name, Region: u.Region, Country: u.Country, Latitude: u.Latitude, Longitude: u.Longitude}
+		(*res)[computeHmac256(u.Name)] = publicUser{Name: u.Name, Region: u.Region, Country: u.Country, Latitude: u.Latitude, Longitude: u.Longitude}
 	}
 
 	// Write user data
