@@ -39,19 +39,27 @@
 
 		<p>Last Updated: <time datetime="{{.Updated}}">{{.UpdatedForHumans}}</time></p>
 
-		<p class="emph">Users online now:</p>
+		<h3>Users online now</h3>
 		{{range .Users}}
 		<div class="user">
 			<h2><a href="/~{{.Name}}/">~{{.Name}}</a></h2> <span class="location">{{Location .Region .Country}} </span> <span class="time">{{.CurrentTime}}</span>
 		</div>
 		{{end}}
 
-		<p class="emph" style="margin-top: 2em; margin-bottom: 1em;">All users - <a href="/~bear/map.html">full map</a> | <a href="/~bear/where.json">data</a></p>
+		<h3>To add yourself</h3>
+		<p>
+			<strong>Anonymously</strong>: create a `.somewhere` file in your home dir with <code>touch ~/.somewhere</code>
+		</p>
+		<p>
+			<strong>Publicly</strong>: create a `.here` file in your home dir with <code>touch ~/.here</code>
+		</p>
+
+		<h3>Map - <a href="/~bear/map.html">full screen</a> - <a href="/~bear/where.json">data</a></h3>
 		<iframe src="/~bear/map.html"></iframe>
 
 		<h3>How does it work?</h3>
-		<p>Every 15 minutes this program runs `who --ips` and looks up geo info on any IPs it can, hits Google's geocode API to get some more general coordinates, which adds to <a href="where.json">this data</a> for <a href="map.html">this map</a>, and then generates the page you see here.</p>
-		<p>You can see for yourself in the <a href="https://github.com/thebaer/tildes/blob/master/where/where.go">GitHub project</a>, where contributions are welcome!</p>
+		<p>Every 15 minutes this program runs `who --ips` and then looks up IP geo info on opted-in, logged in users. It hits Google's geocode API with the "[Region], [Country]" data it found to get general coordinates, and generates <a href="where.json">this data</a>, stripping out usernames for anonymous users. When viewing the map, an AJAJ request is made to get the data and the points are added to the map.</p>
+		<p style="margin-bottom: 4em;">You can see for yourself in the <a href="https://github.com/thebaer/tildes/blob/master/where/where.go">GitHub project</a>, where contributions are welcome!</p>
 
 
 	</body>
