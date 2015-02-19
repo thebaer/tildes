@@ -26,18 +26,18 @@ const (
 )
 
 var (
-	hashKey = "~~~"
+	hashSecret = ""
 )
 
 func main() {
 	// Get arguments
 	outFilePtr := flag.String("f", "where", "Outputted HTML filename (without .html)")
 	geocodeAPIKeyPtr := flag.String("k", "", "Google Geocoding API key")
-	hashKeyPtr := flag.String("s", "", "Secret for hashing usernames")
+	hashSecretPtr := flag.String("s", "", "Secret for hashing usernames")
 	flag.Parse()
 
 	// Set globals
-	hashKey = *hashKeyPtr
+	hashSecret = *hashSecretPtr
 
 	// Get online users with `who`
 	users := who()
@@ -185,7 +185,7 @@ func getGeo(u *user) {
 }
 
 func computeHmac256(message string) string {
-    key := []byte(hashKey)
+    key := []byte(hashSecret)
     h := hmac.New(sha256.New, key)
     h.Write([]byte(message))
     return base64.StdEncoding.EncodeToString(h.Sum(nil))
