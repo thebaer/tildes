@@ -63,6 +63,8 @@ type user struct {
 	CurrentTime string `json:"current_time"`
 	Latitude float64 `json:"lat"`
 	Longitude float64 `json:"lng"`
+	Public bool
+	Anonymous bool
 }
 
 type publicUser struct {
@@ -112,7 +114,18 @@ func who() []user {
 	users := make([]user, len(ips))
 	i := 0
 	for ip, name := range ips {
-		users[i] = user{Name: name, IP: ip}
+		users[i] = user{Name: name, IP: ip, Public: true, Anonymous: false}
+
+		// Get user permissions, marking if they're not opted-in with a 
+		// `.here` file in their $HOME dir.
+		if _, err := os.Stat("/home/" + name + "/.here"); os.IsNotExist(err) {
+			users[i].Public = false
+		}
+		if _, err := os.Stat("/home/" + name + "/.somewhere"); err == nil {
+			users[i].Public = true
+			users[i].Anonymous = true
+		}
+
 		i++
 	}
 
@@ -164,8 +177,10 @@ func getGeo(u *user) {
 		country := dat["country_name"].(string)
 
 		u.CurrentTime = getTimeInZone(dat["time_zone"].(string))
-		u.Region = region
-		u.Country = country
+		if u.Public {
+			u.Region = region
+			u.Country = country
+		}
 	}
 }
 
@@ -177,6 +192,10 @@ func computeHmac256(message string) string {
 }
 
 func getFuzzyCoords(u *user, apiKey string) {
+	if !u.Public {
+		return
+	}
+
 	fmt.Printf("Fetching %s fuzzy coordinates...\n", u.Name)
 
 	loc := prettyLocation(u.Region, u.Country)
@@ -201,7 +220,25 @@ func cacheUserLocations(users *[]user) {
 	// Update user data
 	for i := range *users {
 		u := (*users)[i]
-		(*res)[computeHmac256(u.Name)] = publicUser{Name: u.Name, Region: u.Region, Country: u.Country, Latitude: u.Latitude, Longitude: u.Longitude}
+
+		// Don't save users who are private
+		if !u.Public {
+			continue
+		}
+
+		// Hide user's name if they want to remain anonymous
+		var displayName string
+		if !u.Anonymous {
+			displayName = u.Name
+		}
+
+		(*res)[computeHmac256(u.Name)] = publicUser{Name: displayName, Region: u.Region, Country: u.Country, Latitude: u.Latitude, Longitude: u.Longitude}
+
+		// Now that we have the info we need, remove it from the page's user list
+		if u.Anonymous {
+			(*users)[i].Region = ""
+			(*users)[i].Country = ""
+		}
 	}
 
 	// Write user data
