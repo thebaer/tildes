@@ -1,30 +1,30 @@
 package main
 
 import (
+	"bufio"
+	"flag"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
-	"fmt"
-	"time"
-	"flag"
 	"sort"
-	"bufio"
 	"strconv"
 	"strings"
-	"io/ioutil"
 	"text/template"
+	"time"
 
 	"github.com/thebaer/tildes/store"
 )
 
 var (
-	scoresPath = "/home/krowbar/Code/irc/tildescores.txt"
-	jackpotPath = "/home/krowbar/Code/irc/tildejackpot.txt"
+	scoresPath    = "/home/krowbar/Code/irc/tildescores.txt"
+	jackpotPath   = "/home/krowbar/Code/irc/tildejackpot.txt"
 	addictionData = "/home/karlen/bin/tilderoyale"
 )
 
 const (
 	scoreDeltasPath = "/home/bear/scoredeltas.txt"
-	deltaDelimiter = "+++"
+	deltaDelimiter  = "+++"
 )
 
 func main() {
@@ -41,7 +41,7 @@ func main() {
 		addictionData = "/home/bear/addicted.sh"
 	}
 
-	headers := []string{ "User", "Tildes", "Last Collected", "Addiction", "# Asks", "Avg.", "Last Amt." }
+	headers := []string{"User", "Tildes", "Last Collected", "Addiction", "# Asks", "Avg.", "Last Amt."}
 
 	scoresData := store.ReadRows(scoresPath, "&^%")
 	updatesData := store.ReadRows(scoreDeltasPath, deltaDelimiter)
@@ -54,21 +54,24 @@ func main() {
 
 type table struct {
 	Headers []string
-	Rows []store.Row
+	Rows    []store.Row
 }
 
 type By func(r1, r2 *store.Row) bool
+
 func (by By) Sort(rows []store.Row) {
-	rs := &rowSorter {
+	rs := &rowSorter{
 		rows: rows,
-		by: by,
+		by:   by,
 	}
 	sort.Sort(rs)
 }
+
 type rowSorter struct {
 	rows []store.Row
-	by func(r1, r2 *store.Row) bool
+	by   func(r1, r2 *store.Row) bool
 }
+
 func (r *rowSorter) Len() int {
 	return len(r.rows)
 }
@@ -117,20 +120,20 @@ func niceTime(sec int) string {
 	if sec < 60 {
 		return fmt.Sprintf("%dsec", sec)
 	} else if sec < 3600 {
-		return fmt.Sprintf("%smin", trimTrailingZerosShort(float64(sec) / 60.0))
+		return fmt.Sprintf("%smin", trimTrailingZerosShort(float64(sec)/60.0))
 	} else if sec < 86400 {
-		return fmt.Sprintf("%shr", trimTrailingZerosShort(float64(sec) / 3600.0))
+		return fmt.Sprintf("%shr", trimTrailingZerosShort(float64(sec)/3600.0))
 	}
-	return fmt.Sprintf("%sdy", trimTrailingZerosShort(float64(sec) / 86400.0))
+	return fmt.Sprintf("%sdy", trimTrailingZerosShort(float64(sec)/86400.0))
 }
 
 type LastScore struct {
-	LastUpdate int
-	LastScore int
+	LastUpdate    int
+	LastScore     int
 	LastIncrement int
-	Times int
-	ScoreOffset int
-	Addiction int
+	Times         int
+	ScoreOffset   int
+	Addiction     int
 }
 
 func checkScoreDelta(scoreRows, deltaRows *[]store.Row) *[]store.Row {
@@ -150,7 +153,7 @@ func checkScoreDelta(scoreRows, deltaRows *[]store.Row) *[]store.Row {
 		times, _ := strconv.Atoi(r.Data[4])
 		so, _ := strconv.Atoi(r.Data[5])
 
-		users[r.Data[0]] = LastScore{ LastScore: score, LastUpdate: update, LastIncrement: inc, Times: times, ScoreOffset: so } 
+		users[r.Data[0]] = LastScore{LastScore: score, LastUpdate: update, LastIncrement: inc, Times: times, ScoreOffset: so}
 	}
 
 	// Fetch IRC log data
@@ -175,7 +178,7 @@ func checkScoreDelta(scoreRows, deltaRows *[]store.Row) *[]store.Row {
 
 		u, exists := users[uname]
 		if !exists {
-			u = LastScore{ ScoreOffset: 0 }
+			u = LastScore{ScoreOffset: 0}
 		}
 		u.ScoreOffset = 0
 		u.Times = asks
@@ -197,7 +200,7 @@ func checkScoreDelta(scoreRows, deltaRows *[]store.Row) *[]store.Row {
 
 		// Fill in any missing users
 		if !exists {
-			u = LastScore{ LastScore: score, LastIncrement: -1, LastUpdate: update, Times: 0, ScoreOffset: score, Addiction: 0 }
+			u = LastScore{LastScore: score, LastIncrement: -1, LastUpdate: update, Times: 0, ScoreOffset: score, Addiction: 0}
 			users[r.Data[0]] = u
 		}
 
@@ -210,7 +213,7 @@ func checkScoreDelta(scoreRows, deltaRows *[]store.Row) *[]store.Row {
 		}
 
 		r.Data = append(r.Data, niceTime(u.Addiction))
-		
+
 		var asksStr string
 		if u.Times > 0 {
 			asksStr = strconv.Itoa(u.Times)
@@ -221,7 +224,7 @@ func checkScoreDelta(scoreRows, deltaRows *[]store.Row) *[]store.Row {
 
 		var avgStr string
 		if u.Times > 0 {
-			avg := float64(score - u.ScoreOffset) / float64(u.Times)
+			avg := float64(score-u.ScoreOffset) / float64(u.Times)
 			avgStr = trimTrailingZeros(avg)
 		} else {
 			avgStr = "-"
@@ -241,7 +244,7 @@ func checkScoreDelta(scoreRows, deltaRows *[]store.Row) *[]store.Row {
 	}
 
 	// Write deltas
-	f, err := os.OpenFile(scoreDeltasPath, os.O_CREATE | os.O_RDWR, 0644)
+	f, err := os.OpenFile(scoreDeltasPath, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -285,11 +288,11 @@ func getFile(path string) string {
 }
 
 type Page struct {
-	Title string
-	Table table
-	Updated string
+	Title            string
+	Table            table
+	Updated          string
 	UpdatedForHumans string
-	Jackpot int
+	Jackpot          int
 }
 
 func add(x, y int) int {
@@ -303,10 +306,10 @@ func generate(title, jackpot string, table *table, outputFile string) {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	defer f.Close()
 
-	funcMap := template.FuncMap {
+	funcMap := template.FuncMap{
 		"add": add,
 	}
 

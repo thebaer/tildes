@@ -1,21 +1,21 @@
 package main
 
 import (
-	"encoding/json"
-	"strings"
 	"bufio"
-	"os"
-	"io/ioutil"
-	"os/exec"
-	"fmt"
-	"regexp"
-	"net/http"
-	"flag"
-	"time"
-	"text/template"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
+	"flag"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"os/exec"
+	"regexp"
+	"strings"
+	"text/template"
+	"time"
 
 	"github.com/thebaer/geo"
 	"github.com/thebaer/tildes/store"
@@ -56,22 +56,22 @@ func main() {
 }
 
 type user struct {
-	Name string `json:"name"`
-	IP string `json:"ip"`
-	Region string `json:"region"`
-	Country string `json:"country"`
-	CurrentTime string `json:"current_time"`
-	Latitude float64 `json:"lat"`
-	Longitude float64 `json:"lng"`
-	Public bool
-	Anonymous bool
+	Name        string  `json:"name"`
+	IP          string  `json:"ip"`
+	Region      string  `json:"region"`
+	Country     string  `json:"country"`
+	CurrentTime string  `json:"current_time"`
+	Latitude    float64 `json:"lat"`
+	Longitude   float64 `json:"lng"`
+	Public      bool
+	Anonymous   bool
 }
 
 type publicUser struct {
-	Name string `json:"name"`
-	Region string `json:"region"`
-	Country string `json:"country"`
-	Latitude float64 `json:"lat"`
+	Name      string  `json:"name"`
+	Region    string  `json:"region"`
+	Country   string  `json:"country"`
+	Latitude  float64 `json:"lat"`
 	Longitude float64 `json:"lng"`
 }
 
@@ -116,7 +116,7 @@ func who() []user {
 	for ip, name := range ips {
 		users[i] = user{Name: name, IP: ip, Public: true, Anonymous: false}
 
-		// Get user permissions, marking if they're not opted-in with a 
+		// Get user permissions, marking if they're not opted-in with a
 		// `.here` file in their $HOME dir.
 		if _, err := os.Stat("/home/" + name + "/.here"); os.IsNotExist(err) {
 			users[i].Public = false
@@ -185,10 +185,10 @@ func getGeo(u *user) {
 }
 
 func computeHmac256(message string) string {
-    key := []byte(hashSecret)
-    h := hmac.New(sha256.New, key)
-    h.Write([]byte(message))
-    return base64.StdEncoding.EncodeToString(h.Sum(nil))
+	key := []byte(hashSecret)
+	h := hmac.New(sha256.New, key)
+	h.Write([]byte(message))
+	return base64.StdEncoding.EncodeToString(h.Sum(nil))
 }
 
 func getFuzzyCoords(u *user, apiKey string) {
@@ -254,8 +254,8 @@ func prettyLocation(region, country string) string {
 }
 
 type page struct {
-	Users []user
-	Updated string
+	Users            []user
+	Updated          string
 	UpdatedForHumans string
 }
 
@@ -266,13 +266,13 @@ func generate(users []user, outputFile string) {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	defer f.Close()
 
-	funcMap := template.FuncMap {
+	funcMap := template.FuncMap{
 		"Location": prettyLocation,
 	}
-	
+
 	w := bufio.NewWriter(f)
 	template, err := template.New("").Funcs(funcMap).ParseFiles("../templates/where.html")
 	if err != nil {
