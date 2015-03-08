@@ -44,6 +44,12 @@
 		</div>
 		{{end}}
 
+		{{$arr := Split .FolderName ","}}
+		<p style="margin: 2em 0;">
+			Create a {{ListDirs .Folders}} folder directly under your home directory.
+			<em>Other</em>-readable files in this folder will show up here. Updated every 30 minutes.
+		</p>
+
 	</body>
 </html>
 {{end}}
