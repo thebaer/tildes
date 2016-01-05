@@ -173,20 +173,20 @@ func getGeo(u *user) {
 
 	response, err := http.Get(fmt.Sprintf("https://freegeoip.net/json/%s", u.IP))
 	if err != nil {
-		fmt.Printf("%s", err)
+		fmt.Printf("GET error: %s\n", err)
 		os.Exit(1)
 	} else {
 		defer response.Body.Close()
 		contents, err := ioutil.ReadAll(response.Body)
 		if err != nil {
-			fmt.Printf("%s", err)
+			fmt.Printf("Body read error: %s\n", err)
 			os.Exit(1)
 		}
 
 		var dat map[string]interface{}
 
 		if err := json.Unmarshal(contents, &dat); err != nil {
-			fmt.Println(err)
+			fmt.Printf("Unmarshal error: %s on data: %s\n", err, contents)
 			return
 		}
 		region := dat["region_name"].(string)
