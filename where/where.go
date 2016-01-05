@@ -118,8 +118,24 @@ func who() []user {
 
 		// Get user permissions, marking if they're not opted-in with a
 		// `.here` file in their $HOME dir.
-		if _, err := os.Stat("/home/" + name + "/.here"); os.IsNotExist(err) {
+		f, err := os.Stat("/home/" + name + "/.here")
+		if os.IsNotExist(err) {
 			users[i].Public = false
+		} else {
+			if f.Size() > 0 {
+				// There's something in the file! Maybe a present?
+				data, err := ioutil.ReadFile("/home/" + name + "/.here")
+				if err != nil {
+					fmt.Printf("Error reading ~/%s/.here: %v\n", name, err)
+				} else {
+					fmt.Printf("Read ~/%s/.here: %s\n", name, data)
+					// Match IP
+					ipMatch := ipRegex.FindAll(data, 1)
+					if len(ipMatch) > 0 {
+						users[i].IP = strings.TrimSpace(string(data))
+					}
+				}
+			}
 		}
 		if _, err := os.Stat("/home/" + name + "/.somewhere"); err == nil {
 			users[i].Public = true
