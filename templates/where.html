@@ -58,7 +58,7 @@
 		<iframe src="/~bear/map.html"></iframe>
 
 		<h3>How does it work?</h3>
-		<p>Every 15 minutes this program runs `who --ips` and then looks up IP geo info on opted-in, logged in users. It hits Google's geocode API with the "[Region], [Country]" data it found to get general coordinates, and generates <a href="where.json">this data</a>, stripping out usernames for anonymous users. When viewing the map, an AJAJ request is made to get the data and the points are added to the map.</p>
+		<p>Every 15 minutes this program runs `who --ips` and then looks up IP geo info on opted-in, logged in users. It hits Google's geocode API with the "[Region], [Country]" data it found to get general coordinates, and generates <a href="where.json">this data</a>, stripping out usernames for anonymous users. When viewing the map, an AJAX request is made to get the data and the points are added to the map.</p>
 		<p style="margin-bottom: 4em;">You can see for yourself in the <a href="https://github.com/thebaer/tildes/blob/master/where/where.go">GitHub project</a>, where contributions are welcome!</p>
 
 
