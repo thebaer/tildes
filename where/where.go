@@ -121,7 +121,7 @@ func who() []user {
 		f, err := os.Stat("/home/" + name + "/.here")
 		if os.IsNotExist(err) {
 			users[i].Public = false
-		} else {
+		} else if f != nil {
 			if f.Size() > 0 {
 				// There's something in the file! Maybe a present?
 				data, err := ioutil.ReadFile("/home/" + name + "/.here")
